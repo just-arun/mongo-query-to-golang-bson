@@ -24,15 +24,18 @@
             padding: 10px;
             height: calc(100vh - 140px);
         }
+
         .copy-btn {
             position: absolute;
             top: 90px;
             right: 10px;
             cursor: pointer;
         }
+
         .w-6 {
             width: 24px;
         }
+
         .h-6 {
             width: 34px;
         }
@@ -54,8 +57,9 @@
             </svg>
         </button>
         <div class="grid">
-            <textarea class="textarea" placeholder="place your text here..." cols="30" rows="10" v-model="data"></textarea>
-            <textarea class="textarea" readonly disabled cols="30" rows="10" v-model="goMongo"></textarea>
+            <textarea class="textarea" placeholder="place your text here..." cols="30" rows="10"
+                v-model="mongoQuery"></textarea>
+            <div class="textarea" style="outline: 1px solid grey;" v-text="goMongo"></div>
         </div>
     </div>
 
@@ -69,23 +73,34 @@
         createApp({
             data() {
                 return {
-                    data: `[
+                    mongoQuery: `[
     { $group : { _id : '$name', totaldocs : { $sum : 1 } } },
     { $out : 'aggResults' }
-]`
+]`,
+                    goMongo: ''
                 }
             },
-            computed: {
-                goMongo() {
-                    let val = String(this.data)
+            watch: {
+                mongoQuery() {
+                    this.init()
+                }
+            },
+            mounted() {
+                this.init()
+            },
+            methods: {
+                init() {
+                    let val = String(this.mongoQuery)
                         .replace(/\{/g, "bson.M{")
                         .replace(/\}/g, "},")
                         .replace(/\[/g, "bson.A{")
                         .replace(/\]/g, "},")
                     let ite = val.match(/\'(.*?)\'/g)
-                    ite.forEach(e => {
-                        val = val.replace(e, e.replace(/\'/g, ""))
-                    })
+                    if (!!ite) {
+                        ite.forEach(e => {
+                            val = val.replace(e, e.replace(/\'/g, ""))
+                        })
+                    }
                     let items = val.match(/(\$)\w+/g)
                     if (!!items) {
                         items.forEach(e => {
@@ -113,21 +128,19 @@
                         .replace(/\"\"/g, '"')
                         .replace(/\"\"/g, '"')
                         .replace(/\"\"/g, '"')
-                    return val
-                }
-            },
-            methods: {
+                    this.goMongo = val;
+                },
                 copyQuery() {
                     window.navigator.clipboard.writeText(this.goMongo)
-                    .then(res => {
-                        alert("copied!")
-                    }).catch(err => {
-                        console.error(err);
-                    })
+                        .then(res => {
+                            alert("copied!")
+                        }).catch(err => {
+                            console.error(err);
+                        })
                 }
             }
         }).mount('#app')
     </script>
 </body>
 
-</html>    
+</html>
