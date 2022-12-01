@@ -58,7 +58,7 @@
             </svg>
         </button>
         <div class="grid">
-            <textarea class="textarea" placeholder="place your text here..." cols="30" rows="10"
+            <textarea id="textbox" class="textarea" placeholder="place your text here..." cols="30" rows="10"
                 v-model="mongoQuery"></textarea>
             <textarea class="textarea" readonly cols="30" rows="10" v-model="goMongo"></textarea>
             <!-- <div class="textarea" style="outline: 1px solid grey;" v-text="goMongo"></div> -->
@@ -78,11 +78,20 @@
                     mongoQuery: `[
     {
         "$match": {
-            "_id": ObjectID("asijdf0ji4320dsfioidfs")
+            "_id": ObjectID("507f1f77bcf86cd799439011")
         }
+    },
+    {
+        $group: {
+            _id: '$name',
+            totaldocs: {
+                $sum: 1
+            }
+        },
+    },
+    {
+        $out: 'aggResults',
     }
-    { $group : { _id : '$name', totaldocs : { $sum : 1 } } },
-    { $out : 'aggResults' }
 ]`,
                     goMongo: ''
                 }
@@ -93,6 +102,21 @@
                 }
             },
             mounted() {
+                document.getElementById('textbox').addEventListener('keydown', function (e) {
+                    if (e.key == 'Tab') {
+                        e.preventDefault();
+                        var start = this.selectionStart;
+                        var end = this.selectionEnd;
+
+                        // set textarea value to: text before caret + tab + text after caret
+                        this.value = this.value.substring(0, start) +
+                            "\t" + this.value.substring(end);
+
+                        // put caret at right position again
+                        this.selectionStart =
+                            this.selectionEnd = start + 1;
+                    }
+                });
                 this.init()
             },
             methods: {
@@ -118,7 +142,7 @@
                     if (mat) {
                         mat.forEach(e => {
                             if (!!e) {
-                                if (!['bson', 'M', 'A', 'D', ''].includes(e)) {
+                                if (!['bson', 'ObjectID', 'ObjectId', 'M', 'A', 'D', ''].includes(e)) {
                                     if (String(e).match(/\b\d\b/)) {
                                         val = val.replace(e, `${e}`)
                                     } else {
@@ -129,13 +153,18 @@
                         })
                     }
                     val = val.replace(/\$\"/g, "$")
-                        .replace(/\,\,/g, ",")
-                        .replace(/\,\,/g, ",")
-                        .replace(/\,\,/g, ",")
-                        .replace(/\"\"/g, '"')
-                        .replace(/\"\"/g, '"')
-                        .replace(/\"\"/g, '"')
                         .replace(/(ObjectID\(|ObjectId\()/g, 'primitive.ObjectIDFromHex(')
+                        .replace(/\"\"/g, '"')
+                        .replace(/\"\"/g, '"')
+                        .replace(/\"\"/g, '"')
+                        .replace(/\}/g, '},')
+                        .replace(/\)/g, '),')
+                        .replace(/\n/g, ',\n')
+                        .replace(/\,\,/g, ",")
+                        .replace(/\,\,/g, ",")
+                        .replace(/\,\,/g, ",")
+                        .replace(/\{,/g, "{")
+                        .replace(/\(,/g, "(")
                     this.goMongo = val;
                 },
                 copyQuery() {
