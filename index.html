@@ -76,6 +76,11 @@
             data() {
                 return {
                     mongoQuery: `[
+    {
+        "$match": {
+            "_id": ObjectID("asijdf0ji4320dsfioidfs")
+        }
+    }
     { $group : { _id : '$name', totaldocs : { $sum : 1 } } },
     { $out : 'aggResults' }
 ]`,
@@ -130,6 +135,7 @@
                         .replace(/\"\"/g, '"')
                         .replace(/\"\"/g, '"')
                         .replace(/\"\"/g, '"')
+                        .replace(/(ObjectID\(|ObjectId\()/g, 'primitive.ObjectIDFromHex(')
                     this.goMongo = val;
                 },
                 copyQuery() {
