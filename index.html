@@ -86,6 +86,12 @@
             _id: '$name',
             totaldocs: {
                 $sum: 1
+            },
+            content: {
+                "$first": "",
+            },
+            count: {
+                "$push": 1
             }
         },
     },
@@ -121,8 +127,8 @@
             },
             methods: {
                 init() {
-                    let val = String(this.mongoQuery)
-                        .replace(/\{/g, "bson.M{")
+                    let val = String(this.mongoQuery).trim()
+                    val = val.replace(/\{/g, "bson.M{")
                         .replace(/\}/g, "},")
                         .replace(/\[/g, "bson.A{")
                         .replace(/\]/g, "},")
@@ -138,11 +144,14 @@
                             val = val.replace(e, `"${e}"`)
                         })
                     }
-                    let mat = val.trim().match(/\b(\w){0,88}\b/g)
-                    if (mat) {
-                        mat.forEach(e => {
+                    // let dat = val.trim().match(/"(.*?)"/g)
+                    let dat = val.trim().match(/\b(\w){0,999}\b/g)
+                    console.log(dat);
+                    if (dat) {
+                        dat.forEach(e => {
                             if (!!e) {
                                 if (!['bson', 'ObjectID', 'ObjectId', 'M', 'A', 'D', ''].includes(e)) {
+                                        console.log(e);
                                     if (String(e).match(/\b\d\b/)) {
                                         val = val.replace(e, `${e}`)
                                     } else {
@@ -152,11 +161,39 @@
                             }
                         })
                     }
+                    // let itees = val.match(/.\"\"./g)
+                    // console.log(itees);
+                    // if (!!itees) {
+                    //     itees.forEach(e => {
+                    //         val = val.replace(e, `${e.replace(/\"\"/g, '"')}`)
+                    //     })
+                    // }
+                    let ites = val.match(/[\"]{1,10}.?[\w]{1,1000}.?[\"]{1,10}/g)
+                    if (!!ites) {
+                        ites.forEach(e => {
+                            let m = `"${e.replace(/\"/g, "")}"`
+                            val = val.replace(e, m)
+                        })
+                    }
+                    let iteees = val.match(/[\"]{1,4}/g)
+                    if (!!iteees) {
+                        iteees.forEach(e => {
+                            let m = `${e.replace('"""', '"').replace('""', '"')}`
+                            val = val.replace(e, m)
+                        })
+                    }
+                    let its = val.match(/\b[\w]{1,1000}\:/g)
+                    if (!!its) {
+                        its.forEach(e => {
+                            let m = `"${String(e).slice(0,e.length - 1)}":`
+                            val = val.replace(e, m)
+                        })
+                    }
                     val = val.replace(/\$\"/g, "$")
                         .replace(/(ObjectID\(|ObjectId\()/g, 'primitive.ObjectIDFromHex(')
-                        .replace(/\"\"/g, '"')
-                        .replace(/\"\"/g, '"')
-                        .replace(/\"\"/g, '"')
+                        .replace(/\'/g, '"')
+                        .replace(': ",', ": \"\"\,")
+                        // .replace(/\"\"/g, '"')
                         .replace(/\}/g, '},')
                         .replace(/\)/g, '),')
                         .replace(/\n/g, ',\n')
@@ -165,6 +202,16 @@
                         .replace(/\,\,/g, ",")
                         .replace(/\{,/g, "{")
                         .replace(/\(,/g, "(")
+                    let ids = "\n";
+                    let objectIds = val.match(/primitive.ObjectIDFromHex\("(.*?)"\)/g)
+                    if (!!objectIds) {
+                        objectIds.forEach((e, i) => {
+                            ids += `oID${i}, err := ${e}\nif err != nil {\n  panic(err)\n}\n\n`
+                            val = val.replace(e, `oID${i}`)
+                        })
+                        val = `\n// id's used in query\n${ids} \nfilter := ${val}`;
+                        val = val.slice(0, val.length - 1)
+                    }
                     this.goMongo = val;
                 },
                 copyQuery() {
