@@ -41,6 +41,18 @@
             width: 34px;
         }
     </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-W2CJN9H6EE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'G-W2CJN9H6EE');
+    </script>
 </head>
 
 <body>
@@ -145,7 +157,7 @@
                         dat.forEach(e => {
                             if (!!e) {
                                 if (!['bson', 'ObjectID', 'ObjectId', 'M', 'A', 'D', ''].includes(e)) {
-                                        console.log(e);
+                                    console.log(e);
                                     if (String(e).match(/\b\d\b/)) {
                                         val = val.replace(e, `${e}`)
                                     } else {
