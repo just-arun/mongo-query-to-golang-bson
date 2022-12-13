@@ -209,8 +209,10 @@
                             ids += `oID${i}, err := ${e}\nif err != nil {\n  panic(err)\n}\n\n`
                             val = val.replace(e, `oID${i}`)
                         })
-                        val = `\n// id's used in query\n${ids} \nfilter := ${val}`;
+                        val = `\n// id's used in query\n${ids} \nquery := ${val}`;
                         val = val.slice(0, val.length - 1)
+                    } else {
+                        val = `query := ${val}`.slice(0, val.length - 1)
                     }
                     this.goMongo = val;
                 },
