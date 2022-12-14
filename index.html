@@ -94,15 +94,17 @@
         }
     },
     {
-        $group: {
-            _id: '$name',
+        "$group": {
+            _id: {
+                "$first": '$name',
+            },
             totaldocs: {
                 $sum: 1
             },
         },
     },
     {
-        $out: 'aggResults',
+        "$out": 'aggResults',
     }
 ]`,
                     goMongo: ''
